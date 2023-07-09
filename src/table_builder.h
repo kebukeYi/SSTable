@@ -12,10 +12,17 @@
 #include "format.h"
 
 namespace leveldb {
+
+    //
     class BlockBuilder;
+
+    //
     class BlockHandle;
+
+    //
     class WritableFile;
 
+    //
     class TableBuilder {
     public:
         TableBuilder(const Options &options, WritableFile *file);
@@ -42,6 +49,7 @@ namespace leveldb {
         bool ok() const { return status().ok(); }
 
         struct Rep;
+
         Rep *rep_;
     };
 }

@@ -13,10 +13,11 @@ namespace leveldb {
 
     class RandomAccessFile;
 
+    //
     class Table {
     public:
-        static Status Open(const Options &options, RandomAccessFile *file,
-                           uint64_t size, Table **table);
+        // 静态方法
+        static Status Open(const Options &options, RandomAccessFile *file, uint64_t size, Table **table);
 
         Table(const Table &) = delete;
 
@@ -26,8 +27,7 @@ namespace leveldb {
     private:
         struct Rep;
 
-        Iterator *BlockReader(void *arg, const ReadOptions &options,
-                              const Slice &index_value);
+        Iterator *BlockReader(void *arg, const ReadOptions &options,const Slice &index_value);
 
         explicit Table(Rep *rep) : rep_(rep) {};
 

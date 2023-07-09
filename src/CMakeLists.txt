@@ -48,9 +48,10 @@ set(ROS_BUILD_TYPE Debug)
 
 
 include(CheckLibraryExists)
-# /usr/local/include中包含snappy.h
+# ubuntu 安装 snappy1.1.7 https://blog.csdn.net/qq_36835255/article/details/124708084
+# /usr/local/include 中包含snappy.h
 link_directories("/usr/local/include")
-# /usr/local/lib中包含libsnappy.a
+# /usr/local/lib 中包含libsnappy.a
 include_directories("/usr/local/lib" "/usr/local/include")
 check_library_exists(snappy snappy_compress "" HAVE_SNAPPY)
 

@@ -8,6 +8,8 @@
 #include "table_builder.h"
 
 namespace leveldb {
+
+    //
     class BlockHandle {
     public:
         void set_offset(uint64_t offset) { offset_ = offset; }
@@ -39,17 +41,21 @@ namespace leveldb {
         uint64_t size_;
     };
 
+    // 文件尾部 固定长度
     class Footer {
     public:
-        // 一个index block handle加上padding是BlockHandle::kMaxEncodedLength
+        // 一个 index block handle 加上 padding 是 BlockHandle::kMaxEncodedLength
         // magic number为uint64_t，8Byte
         enum {
+            // offset_ size_ enum magic_number
             kEncodedLength = BlockHandle::kMaxEncodedLength + 8
         };
 
         Footer() = default;
 
-        void set_index_handle(const BlockHandle &index_handle) { index_handle_ = index_handle; }
+        void set_index_handle(const BlockHandle &index_handle) {
+            index_handle_ = index_handle;
+        }
 
         BlockHandle index_handle() const { return index_handle_; }
 
@@ -75,8 +81,8 @@ namespace leveldb {
         bool heap_allocated;
     };
 
-    Status ReadBlock(RandomAccessFile *file, const ReadOptions &options,
-                     const BlockHandle &handle, BlockContents *result);
+    Status
+    ReadBlock(RandomAccessFile *file, const ReadOptions &options, const BlockHandle &handle, BlockContents *result);
 }
 
 

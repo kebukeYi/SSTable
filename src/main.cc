@@ -8,6 +8,7 @@
 
 #define OS "Linux"
 #define KV_NUM 160 * 160
+// #define KV_NUM 40
 
 std::string path;
 std::vector<std::string> test_case;
@@ -24,7 +25,7 @@ leveldb::RandomAccessFile *randomAccessFile = nullptr;
 std::string key = "key";
 std::string value = "value";
 
-int get_quene[KV_NUM];
+int get_queue[KV_NUM];
 
 // 如果有报错，就显示出来
 void check_status(const leveldb::Status &s) {
@@ -36,7 +37,9 @@ void check_status(const leveldb::Status &s) {
 
 // 配置一些参数
 void init_config() {
+    // 包含了 比较器 环境器
     options = leveldb::Options();
+    // 读操作？
     readOptions = leveldb::ReadOptions();
     readOptions.verify_checksums = true;
     env = leveldb::Env::Default();
@@ -46,7 +49,7 @@ void init_config() {
 leveldb::Status init_path() {
     leveldb::Status s;
     if (OS == "WIN") {
-        path = "B:/Project/Clion/SSTable/test_case.sst";
+        path = "./data/test_case.sst";
         s = leveldb::Status::OK();
     } else if (OS == "Linux") {
         path = "/home/wangtingzheng/source/test_case.sst";
@@ -57,7 +60,7 @@ leveldb::Status init_path() {
     return s;
 }
 
-// 生成num对符合comparator的KV对
+// 生成num对 符合comparator的KV对
 std::vector<std::string> generate(int num) {
     std::vector<std::string> dst;
 
@@ -72,17 +75,15 @@ std::vector<std::string> generate(int num) {
         }
         dst.push_back(temp);
     }
-
     return dst;
 }
 
 // 打乱[0, KV_NUM - 1]
-void init_get_quene(){
+void init_get_queue() {
     for (int i = 0; i < KV_NUM; i++) {
-        get_quene[i] = i;
+        get_queue[i] = i;
     }
-
-    std::shuffle(get_quene, get_quene + KV_NUM, std::mt19937(std::random_device()()));
+    std::shuffle(get_queue, get_queue + KV_NUM, std::mt19937(std::random_device()()));
 }
 
 // 生成KV_NUM对KV对
@@ -93,9 +94,13 @@ void init_test_case() {
 
 // 初始化
 void init() {
+    // 初始化 数据文件所在地
     init_path();
-    init_get_quene();
+    // 初始化 数组值
+    init_get_queue();
+    // 创造出 Env
     init_config();
+    // 生成一维数组
     init_test_case();
 }
 
@@ -113,20 +118,23 @@ void test_test_case() {
     }
 }
 
+// 写操作
 void test_block_write() {
+    // 清空文件 只写文件 创造文件
     s = env->NewWritableFile(path, &file);
     check_status(s);
-
-    check_status(s);
-
+    // 初始化 ssTable 构造器
     leveldb::TableBuilder tableBuilder = leveldb::TableBuilder(options, file);
 
-    // 把test_case的所有KV写入SSTable
+    // 把test_case的所有KV写入SSTable，并且达到阈值后，会进行刷盘的
     for (int i = 0; i < KV_NUM; ++i) {
-        tableBuilder.Add(add_number_to_slice(key, i), add_number_to_slice(value, i));
+        leveldb::Slice key_ = add_number_to_slice(key, i);
+        leveldb::Slice value_ = add_number_to_slice(value, i);
+        // 向 data 向 index 中 写入数据
+        tableBuilder.Add(key_, value_);
     }
 
-    // 构建SSTable
+    // 构建 SSTable，写入 footer 信息
     s = tableBuilder.Finish();
     check_status(s);
 
@@ -136,7 +144,7 @@ void test_block_write() {
     check_status(s);
 }
 
-// 查询到KV对后的处理函数
+// 查询到KV对,之后的处理函数
 void kv_handler(const leveldb::Slice &key, const leveldb::Slice &value) {
     // 去除前缀
     std::string key_number = key.ToString().replace(0, 3, "");
@@ -147,30 +155,32 @@ void kv_handler(const leveldb::Slice &key, const leveldb::Slice &value) {
 
 // 之所以分开两个函数，是因为读写同一个文件似乎不能写在一个函数中
 void test_block_read() {
+    // 打开文件 仅仅可读
     s = env->NewRandomAccessFile(path, &randomAccessFile);
     check_status(s);
 
     leveldb::Table *table = nullptr;
 
     uint64_t size;
+    // 浅浅试探一下 获得文件大小
     env->GetFileSize(path, &size);
-    // 读取SSTable数据到table
+    // 读取 SSTable 中的 Restarts point 组数据到 table 内存中
     s = leveldb::Table::Open(options, randomAccessFile, size, &table);
     check_status(s);
 
     for (int i = 0; i < KV_NUM; i++) {
         // 从随机序列中取得一个序号，取得字符串与key合并，查询这个key，使用kv_handler检查kv对是否对应
-        table->InternalGet(readOptions, add_number_to_slice("key", get_quene[i]), kv_handler);
+        table->InternalGet(readOptions, add_number_to_slice("key", get_queue[i]), kv_handler);
     }
-
     printf("All test passed\n");
 }
 
 int main(int argc, const char *argv[]) {
     init();
     test_test_case();
+    // 普通写流程
     test_block_write();
+    // 普通读流程
     test_block_read();
-
     return 0;
 }

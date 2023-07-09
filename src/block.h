@@ -23,10 +23,11 @@ namespace leveldb {
 
     private:
         class Iter;
-
+        // data 区域 起始地址
         const char *data_;
-        size_t size_; //size_要参与和sizeof()的计算，同时它并不会为了持久化被编码，所以声明为size_t，其它的变量都是uint32_t
-        uint32_t restarts_offset_;
+        // 大小与  unsigned int  或  unsigned long  相同
+        size_t size_; // size_ 要参与和 sizeof() 的计算，同时它并不会为了持久化被编码，所以声明为 size_t，其它的变量都是uint32_t
+        uint32_t restarts_offset_; //
 
         bool owned;
 

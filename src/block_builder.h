@@ -10,9 +10,10 @@
 namespace leveldb {
     struct Options;
 
+    //
     class BlockBuilder {
     public:
-        explicit BlockBuilder(const Options *options);
+        explicit BlockBuilder(const Options *options, std::string name);
 
         void Add(const Slice &key, const Slice &value);
 
@@ -27,10 +28,9 @@ namespace leveldb {
         std::string buffer_;
         std::vector<uint32_t> restarts_;
         std::string last_key_;
-
         bool finished_;
-
-        int counter_;
+        int counter_; // 保存数量
+        std::string name_;
     };
 }
 
